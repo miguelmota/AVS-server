@@ -9,8 +9,8 @@ const request = require('request');
 const _ = require('lodash');
 
 const AUTH_CONFIG = require('./config/auth.json');
-const HOST = _.get(AUTH_CONFIG, 'host', 'localhost');
-const PORT = _.get(AUTH_CONFIG, 'port', 3000);
+const AUTH_HOST = _.get(AUTH_CONFIG, 'host', 'localhost');
+const AUTH_PORT = _.get(AUTH_CONFIG, 'port', 3000);
 const PRODUCT_ID = _.get(AUTH_CONFIG, 'productId', 'product_id');
 const DEVICE_SERIAL_NUMBER = _.get(AUTH_CONFIG, 'deviceSerialNumber', 0);
 
@@ -48,7 +48,7 @@ function loadTokenFromFile() {
 }
 
 function getNewToken() {
-  const URL = 'https://' + HOST + ':' + PORT + '/device/accesstoken/' + PRODUCT_ID + '/' + DEVICE_SERIAL_NUMBER + '/' + DEVICE_SECRET;
+  const URL = 'https://' + AUTH_HOST + ':' + AUTH_PORT + '/device/accesstoken/' + PRODUCT_ID + '/' + DEVICE_SERIAL_NUMBER + '/' + DEVICE_SECRET;
 
   request({
     url: URL
@@ -119,7 +119,7 @@ app.get('/', function(req, res){
   res.send('index');
 });
 
-const PORT = process.ENV_PORT || _.get(config, 'port', 9000);
+const PORT = process.ENV_PORT || _.get(CONFIG, 'port', 9000);
 
 http.listen(PORT, function(){
 
