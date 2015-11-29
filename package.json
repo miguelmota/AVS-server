@@ -1,0 +1,22 @@
+{
+  "name": "AVS-server",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Miguel Mota <hello@miguelmota.com> (http://www.miguelmota.com/)",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.13.3",
+    "is-buffer": "^1.0.2",
+    "is-stream": "^1.0.1",
+    "lodash": "^3.10.1",
+    "request": "^2.61.0",
+    "spawn-stream": "^1.0.2",
+    "stream-to-buffer": "^0.1.0",
+    "ws": "^0.8.0"
+  }
+}
