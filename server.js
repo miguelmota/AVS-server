@@ -9,6 +9,7 @@ const isStream = require('is-stream');
 const isBuffer = require('is-buffer');
 const request = require('request');
 const _ = require('lodash');
+const httpParser = require('http-message-parser');
 
 const AUTH_CONFIG = require('./config/auth.json');
 const AUTH_HOST = _.get(AUTH_CONFIG, 'host', 'localhost');
@@ -191,36 +192,35 @@ function post(ws, audioBuffer) {
         }
       }
 
-      const str = buffer.toString('utf8');
-      const start = str.indexOf('mpeg')+4;
-      const end = str.search(/--[\s\s]*$/);
-      const slicedBuffer = buffer.slice(start,end);
-      const responseAudioStream = new stream.PassThrough();
-      responseAudioStream.end(slicedBuffer);
+      const parsedMessage = httpParser(buffer);
+      var multipart = parsedMessage.multipart;
 
-      const hstart = str.indexOf('application/json')+16;
-      const hend = str.search('}}');
-      const headersString = str.slice(hstart, hend+5);
-      var headers = {};
-      console.log(hstart, hend);
+      if (Array.isArray(multipart)) {
+        multipart.forEach(function(part) {
+          var headers = part.headers;
+          var bodyBuffer = part.body;
+          var contentType = _.get(headers, 'Content-Type');
 
-      if (hend > -1) {
-        try {
-          headers = JSON.parse(headersString.trim());
-          console.log(JSON.stringify(headers));
-        } catch(e) {
+          if (bodyBuffer) {
+            if (contentType === 'audio/mpeg') {
+              ws.send(JSON.stringify({
+                headers: headers
+              }));
 
-        }
+              const responseAudioStream = new stream.PassThrough();
+              responseAudioStream.end(bodyBuffer);
+              responseAudioStream.on('data', function(data) {
+                ws.send(data, {binary: true});
+              });
+            } else if (contentType === 'application/json') {
+              ws.send(JSON.stringify({
+                headers: headers,
+                body: bodyBuffer.toString('utf8')
+              }));
+            }
+          }
+        });
       }
-
-      responseAudioStream.on('data', function(data) {
-        ws.send(data, {binary: true});
-        /*
-        ws.send(JSON.stringify({
-          headers: headers
-        }));
-       */
-      });
     });
 
     req.on('error', function(e) {

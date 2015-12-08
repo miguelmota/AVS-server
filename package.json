@@ -11,10 +11,11 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.13.3",
+    "http-message-parser": "0.0.2",
     "is-buffer": "^1.0.2",
     "is-stream": "^1.0.1",
     "lodash": "^3.10.1",
-    "request": "^2.61.0",
+    "request": "^2.67.0",
     "spawn-stream": "^1.0.2",
     "stream-to-buffer": "^0.1.0",
     "ws": "^0.8.0"
