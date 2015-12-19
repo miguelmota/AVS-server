@@ -213,10 +213,53 @@ function post(ws, audioBuffer) {
                 ws.send(data, {binary: true});
               });
             } else if (contentType === 'application/json') {
-              ws.send(JSON.stringify({
-                headers: headers,
-                body: bodyBuffer.toString('utf8')
-              }));
+              var body = JSON.parse(bodyBuffer.toString('utf8'));
+              var directives = _.get(body, ['messageBody', 'directives']);
+              var streamUrls = [];
+              if (directives) {
+                body.messageBody.directives = directives.map(function(directive, i) {
+                  var audioItem = _.get(directive, ['payload', 'audioItem']);
+                  if (audioItem) {
+                    var streams = _.get(audioItem, 'streams');
+                    if (streams) {
+                      directive.payload.audioItem.streams = streams.map(function(stream, j) {
+                        if (/^https?/.test(stream.streamUrl)) {
+                          streamUrls.push({
+                            propertyPath: ['messageBody', 'directives', i, 'payload', 'audioItem', 'streams', j],
+                            url: stream.streamUrl
+                          });
+                        }
+                        return stream;
+                      });
+                    }
+                  }
+                  return directive;
+                });
+              }
+
+              var streamUrlsSize = _.size(streamUrls);
+              if (streamUrlsSize) {
+                var completed = 0;
+                streamUrls.forEach(function(stream) {
+                  var urls = [];
+                  request(stream.url, function(error, response, bodyResponse) {
+                    urls.push(bodyResponse);
+                    _.set(body, stream.propertyPath.concat('streamMp3Urls'), urls);
+                    if (++completed === streamUrlsSize) {
+                      send(new Buffer(JSON.stringify(body)));
+                    }
+                  });
+                });
+              } else {
+                send(bodyBuffer);
+              }
+
+              function send(bodyBuffer) {
+                ws.send(JSON.stringify({
+                  headers: headers,
+                  body: bodyBuffer.toString('utf8')
+                }));
+              }
             }
           }
         });
